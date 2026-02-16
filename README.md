@@ -65,7 +65,7 @@ docker run -it --env-file .env -v "$(pwd)/output:/app/output" agentic-game-build
 **Windows (Command Prompt):**
 
 ```bash
-docker run -it --env-file .env -v "%cd%\output:/app\output" agentic-game-builder
+docker run -it --env-file .env -v "%cd%\output:/app/output" agentic-game-builder
 ```
 
 **Windows (PowerShell):**
@@ -100,7 +100,7 @@ User Input → Clarifier → [Interactive Q&A] → Planner → Executor → Vali
 | Agent | Model | Role |
 |-------|-------|------|
 | **Clarifier** | Gemini 2.5 Flash Lite | Extracts requirements with minimal questions. Highly cost-efficient for conversation. |
-| **Planner** | Gemini 2.5 Flash | Creates structured YAML game design document using native tool calling. |
+| **Planner** | Gemini 2.5 Flash | Creates structured JSON game design document with robust fallback parsing. |
 | **Executor** | Gemini 2.5 Flash | Generates complete, playable code (100% dynamic) using an 8K output token window. |
 | **Validator** | Gemini 2.5 Flash | Two-layer validation: deterministic structure checks + LLM semantic review. |
 
@@ -130,9 +130,13 @@ Instead of using heavy, black-box agent frameworks like AutoGen or CrewAI, I imp
 
 To maximize cost-efficiency during development, this system defaults to the Google Gemini API Free Tier. The architectural trade-off is data privacy, as free-tier API data may be used for model training. For a production deployment, the system would require a Paid Tier billing account to ensure Amgo Games' IP remains private.
 
+## 🏆 Technical Win: Solving YAML Hallucination
+
+During development, the Planner agent initially output YAML, but Gemini models frequently hallucinated invalid indentation — causing silent parse failures. Rather than adding fragile post-processing, I made the architectural decision to **migrate the entire Planner pipeline to strict JSON output** with a robust `{`…`}` extraction fallback in `planner.py`. This eliminated the class of errors entirely while keeping the design document fully structured.
+
 ## 🔮 Improvements With More Time
 
-- **Native Structured Outputs** — Currently, the system relies on regex and fallback logic to parse YAML/JSON from the models. With more time, I would strictly enforce Gemini's `response_schema` API parameter to mathematically guarantee Pydantic validation on the LLM's output.
+- **Native Structured Outputs** — With more time, I would strictly enforce Gemini's `response_schema` API parameter to mathematically guarantee Pydantic validation on the LLM's output, removing the need for regex fallback parsing entirely.
 
 - **Parallel Validation** — The Validator currently runs sequentially after file generation. I would refactor this to run asynchronous syntax linters (like ESLint) in parallel with the LLM semantic review to reduce latency.
 
