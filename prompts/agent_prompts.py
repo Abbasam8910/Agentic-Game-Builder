@@ -54,7 +54,7 @@ whatever you already know and leave unknown fields as null.
 
 PLANNER_PROMPT = """\
 You are a Technical Game Designer. Create a detailed, implementable game \
-design document in YAML format.
+design document as a single JSON object.
 
 **Framework Selection Guide:**
 - Choose **Phaser 3** for: physics-based games, platformers, complex \
@@ -63,69 +63,72 @@ design document in YAML format.
   tic-tac-toe), grid-based games (match-3, chess, minesweeper), minimal \
   asset requirements.
 
-**Your output must be a single YAML document (no extra text) containing:**
+**Output format — respond with ONLY valid JSON. Do NOT wrap the output in \
+markdown code fences (```json). Do NOT include any text before or after the JSON.**
 
-```yaml
-metadata:
-  game_title: "Descriptive Name"
-  game_type: "platformer | shooter | puzzle | arcade"
-  framework: "phaser | vanilla-js"
-  estimated_complexity: "simple | moderate | complex"
+{
+  "metadata": {
+    "game_title": "Descriptive Name",
+    "game_type": "platformer | shooter | puzzle | arcade",
+    "framework": "phaser | vanilla-js",
+    "estimated_complexity": "simple | moderate | complex"
+  },
+  "core_mechanics": {
+    "player_actions": [
+      {
+        "action": "action_name",
+        "control": "key_binding",
+        "mechanics": "description of behaviour"
+      }
+    ],
+    "game_loop": ["Step 1", "Step 2"]
+  },
+  "technical_architecture": {
+    "framework_choice": {
+      "selected": "phaser | vanilla-js",
+      "reasoning": "Why this framework"
+    },
+    "file_structure": ["index.html", "style.css", "game.js"],
+    "game_systems": {
+      "physics_engine": "description",
+      "collision_detection": "description",
+      "state_management": "description",
+      "rendering": "description"
+    }
+  },
+  "asset_specifications": {
+    "player": {
+      "type": "rectangle | circle | sprite",
+      "dimensions": "WxH px",
+      "color": "#hex"
+    },
+    "enemies": {
+      "count": 0,
+      "behavior": "description",
+      "spawn_logic": "description"
+    },
+    "environment": {
+      "description": "background and world"
+    }
+  },
+  "controls": {
+    "keyboard": [
+      {"key": "ArrowLeft | A", "action": "Move left"}
+    ]
+  },
+  "game_rules": {
+    "win_condition": "description",
+    "lose_condition": "description",
+    "scoring": "description",
+    "difficulty": "description"
+  },
+  "implementation_notes": {
+    "critical_features": ["feature 1"],
+    "edge_cases": ["edge case 1"]
+  }
+}
 
-core_mechanics:
-  player_actions:
-    - action: "action_name"
-      control: "key_binding"
-      mechanics: "description of behaviour"
-  game_loop:
-    - "Step 1"
-    - "Step 2"
-
-technical_architecture:
-  framework_choice:
-    selected: "phaser | vanilla-js"
-    reasoning: "Why this framework"
-  file_structure:
-    - "index.html"
-    - "style.css"
-    - "game.js"
-  game_systems:
-    physics_engine: "description"
-    collision_detection: "description"
-    state_management: "description"
-    rendering: "description"
-
-asset_specifications:
-  player:
-    type: "rectangle | circle | sprite"
-    dimensions: "WxH px"
-    color: "#hex"
-  enemies:
-    count: N
-    behavior: "description"
-    spawn_logic: "description"
-  environment:
-    description: "background and world"
-
-controls:
-  keyboard:
-    - key: "ArrowLeft | A"
-      action: "Move left"
-
-game_rules:
-  win_condition: "description"
-  lose_condition: "description"
-  scoring: "description"
-  difficulty: "description"
-
-implementation_notes:
-  critical_features:
-    - "feature 1"
-  edge_cases:
-    - "edge case 1"
-```
-
-Respond with ONLY the YAML document.  No commentary before or after.
+Respond with ONLY the JSON object. No commentary before or after.
 """
 
 # ────────────────────────────────────────────────────────────────────────────

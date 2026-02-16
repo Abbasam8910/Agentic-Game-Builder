@@ -12,7 +12,7 @@ import logging
 import re
 from typing import Dict
 
-import yaml
+import json
 
 from prompts.agent_prompts import EXECUTOR_PROMPT
 from utils.api_helpers import call_llm
@@ -80,11 +80,11 @@ def run_executor(state) -> Dict[str, str]:
 # ---------------------------------------------------------------------------
 
 def _format_plan(plan: dict | None) -> str:
-    """Serialise the game plan dict into YAML for the prompt."""
+    """Serialise the game plan dict into JSON for the prompt."""
     if not plan:
         return "No plan available."
     try:
-        return yaml.dump(plan, default_flow_style=False, sort_keys=False)
+        return json.dumps(plan, indent=2, ensure_ascii=False)
     except Exception:
         return str(plan)
 

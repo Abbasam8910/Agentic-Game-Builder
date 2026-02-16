@@ -1,15 +1,14 @@
 """
 Agentic Game-Builder AI — Planner Agent
 
-Takes finalised requirements and produces a structured YAML game design
+Takes finalised requirements and produces a structured JSON game design
 document, including framework selection, technical architecture, asset
 specs, controls, and implementation notes.
 """
 
+import json
 import logging
 from typing import Dict
-
-import yaml
 
 from prompts.agent_prompts import PLANNER_PROMPT
 from utils.api_helpers import call_llm
@@ -68,9 +67,9 @@ def _format_requirements(requirements: dict | None) -> str:
 
 def _parse_planner_response(raw: str) -> Dict:
     """
-    Parse the Planner's YAML response.
+    Parse the Planner's JSON response.
 
-    Handles markdown fences the LLM might wrap around the YAML.
+    Handles markdown fences the LLM might wrap around the JSON.
     """
     text = raw.strip()
 
@@ -81,24 +80,24 @@ def _parse_planner_response(raw: str) -> Dict:
         text = "\n".join(lines)
 
     try:
-        data = yaml.safe_load(text)
+        data = json.loads(text)
         if isinstance(data, dict):
             return data
-    except yaml.YAMLError as exc:
-        logger.error("Failed to parse Planner YAML response: %s", exc)
+    except json.JSONDecodeError:
+        pass
 
-    # Fallback: try to find YAML between fences
-    import re
-    yaml_match = re.search(r"```(?:yaml)?\s*\n(.*?)```", raw, re.DOTALL | re.IGNORECASE)
-    if yaml_match:
+    # Fallback: try to find JSON object in the response
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    if start != -1 and end > start:
         try:
-            data = yaml.safe_load(yaml_match.group(1))
+            data = json.loads(text[start:end])
             if isinstance(data, dict):
                 return data
-        except yaml.YAMLError:
+        except json.JSONDecodeError:
             pass
 
-    logger.error("Could not parse any YAML from Planner response. Using raw text.")
+    logger.error("Could not parse any JSON from Planner response. Using fallback.")
     return {
         "metadata": {
             "game_title": "Generated Game",
