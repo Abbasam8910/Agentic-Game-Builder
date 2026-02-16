@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  game-builder-agent:
+    build: .
+    container_name: agentic-game-builder
+    volumes:
+      - ./output:/app/output
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true

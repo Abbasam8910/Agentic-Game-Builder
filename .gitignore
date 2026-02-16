@@ -3,9 +3,14 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Project-specific
+.env
+agent.log
+output/
+
 # C extensions
 *.so
-
+Agentic Game Builder idea.md
 # Distribution / packaging
 .Python
 build/
