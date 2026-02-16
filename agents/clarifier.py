@@ -11,7 +11,7 @@ import logging
 from typing import Dict
 
 from prompts.agent_prompts import CLARIFIER_PROMPT
-from utils.api_helpers import call_anthropic
+from utils.api_helpers import call_llm
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def run_clarifier(state) -> Dict:
     user_message = "\n".join(parts)
 
     # Call the LLM
-    raw_response = call_anthropic(
+    raw_response = call_llm(
         agent_name="clarifier",
         system_prompt=CLARIFIER_PROMPT,
         user_message=user_message,

@@ -15,7 +15,7 @@ from typing import Dict
 import yaml
 
 from prompts.agent_prompts import EXECUTOR_PROMPT
-from utils.api_helpers import call_anthropic
+from utils.api_helpers import call_llm
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def run_executor(state) -> Dict[str, str]:
 
     user_message = f"Game Plan:\n\n{plan_text}{extra}"
 
-    raw_response = call_anthropic(
+    raw_response = call_llm(
         agent_name="executor",
         system_prompt=EXECUTOR_PROMPT,
         user_message=user_message,

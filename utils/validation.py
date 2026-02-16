@@ -37,11 +37,12 @@ def extract_code_blocks(text: str) -> List[str]:
 
 _INCOMPLETE_PATTERNS = [
     r"\bTODO\b",
-    r"//\s*implement",
-    r"//\s*add\s",
+    r"\bFIXME\b",
     r"PLACEHOLDER",
-    r"function\s+\w+\s*\(\s*\)\s*\{\s*\}",  # empty function body
-    r"=>\s*\{\s*\}",                          # empty arrow function
+    r"//\s*add\s+(logic|code|implementation)\s+here",  # "add logic here" only
+    r"//\s*implement\s+(this|later|here)",              # "implement later" only
+    r"function\s+\w+\s*\(\s*\)\s*\{\s*\}",             # empty function body
+    r"=>\s*\{\s*\}",                                    # empty arrow function
 ]
 
 

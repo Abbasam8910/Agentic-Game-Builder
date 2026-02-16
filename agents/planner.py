@@ -12,7 +12,7 @@ from typing import Dict
 import yaml
 
 from prompts.agent_prompts import PLANNER_PROMPT
-from utils.api_helpers import call_anthropic
+from utils.api_helpers import call_llm
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def run_planner(state) -> Dict:
         f"Original user idea: {state.user_input}"
     )
 
-    raw_response = call_anthropic(
+    raw_response = call_llm(
         agent_name="planner",
         system_prompt=PLANNER_PROMPT,
         user_message=user_message,

@@ -13,7 +13,7 @@ import logging
 from typing import Dict
 
 from prompts.agent_prompts import VALIDATOR_PROMPT
-from utils.api_helpers import call_anthropic
+from utils.api_helpers import call_llm
 from utils.validation import run_all_checks
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def run_validator(state) -> Dict:
 
     # ── Layer 2: LLM-based semantic review ──────────────────────────────
     code_summary = _build_code_summary(files)
-    raw_response = call_anthropic(
+    raw_response = call_llm(
         agent_name="validator",
         system_prompt=VALIDATOR_PROMPT,
         user_message=code_summary,
