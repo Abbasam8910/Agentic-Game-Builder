@@ -74,7 +74,7 @@ docker run -it --env-file .env -v "%cd%\output:/app/output" agentic-game-builder
 docker run -it --env-file .env -v "${PWD}/output:/app/output" agentic-game-builder
 ```
 
-## 🏗️ Agent Architecture
+## 🏗️ Multi-Agent Architecture
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -142,9 +142,9 @@ During development, the Planner agent initially output YAML, but Gemini models f
 
 - **Streaming UI Responses** — Implementing token streaming in the CLI would significantly improve UX during the Execution phase, giving the user immediate visual feedback while the 10KB+ game code generates.
 
-## 🔄 Error Handling (Self-Healing in Action)
+## 🔄 Error Handling (Multi-Agent Self-Healing)
 
-Because LLMs are non-deterministic, generating raw code zero-shot is prone to hallucination. This architecture uses a multi-agent system to achieve "self-healing."
+Because LLMs are non-deterministic, generating raw code zero-shot is prone to hallucination. This multi-agent architecture achieves "self-healing" — each agent validates the output of the previous one.
 
 - **`@safe_llm_call` decorator** — wraps all API calls with:
   - Rate-limit / 503 overload → exponential backoff (2ˣ seconds, max 3 retries)
