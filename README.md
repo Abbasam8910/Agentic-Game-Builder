@@ -1,17 +1,17 @@
 # 🎮 Agentic Game-Builder AI
 
-An intelligent multi-agent system that transforms natural language game ideas into fully playable HTML/CSS/JavaScript games.
+An intelligent multi-agent system that transforms natural language game ideas into fully playable HTML/CSS/JavaScript games — powered by Google Gemini.
 
 ## ✨ Features
 
 - **Natural Language Input** — Describe your game idea in plain English
-- **Intelligent Clarification** — Asks only necessary questions (max 5-7), never cosmetic details
+- **Intelligent Clarification** — Asks only necessary questions (max 4 total), never cosmetic details
 - **Automatic Framework Selection** — Chooses Phaser 3 or Vanilla JS based on game complexity
 - **Complete Code Generation** — Produces three files (HTML, CSS, JS) with no placeholders
 - **Two-Layer Validation** — Deterministic regex checks + LLM semantic review
-- **Retry Logic** — Auto-retries failed code generation up to 3 times
+- **Self-Healing Retry Logic** — Auto-retries failed code generation up to 3 times with error feedback
 - **Rich CLI** — Beautiful terminal interface with progress bars, tables, and color-coded output
-- **Dockerized** — Ready for containerized deployment
+- **Fully Dockerized** — Containerized with volume mounts for local file output
 
 ## 🚀 Quick Start
 
@@ -44,42 +44,34 @@ cp .env.example .env
 python main.py
 ```
 
-### Docker Setup
+## 🐳 Docker Build & Run Instructions
+
+This application is fully containerized. Because it is an interactive CLI agent that generates local files, the Docker container must be run in interactive mode (`-it`) and use a volume mount (`-v`) to save the generated games to your host machine.
+
+### 1. Build the Docker Image
 
 ```bash
-# Set up environment variables
-cp .env.example .env
-# Edit .env and add your GOOGLE_API_KEY
-
-# Build and run
-docker-compose up
+docker build -t agentic-game-builder .
 ```
 
-## 💡 Example Usage
+### 2. Run the Agent
 
+**Mac / Linux:**
+
+```bash
+docker run -it --env-file .env -v "$(pwd)/output:/app/output" agentic-game-builder
 ```
-🎮 Agentic Game-Builder AI
 
-Enter your game idea:
-→ Create a space shooter game
+**Windows (Command Prompt):**
 
-━━━ Phase 1: Requirements Clarification ━━━
-❓ A few quick questions …
-✅ Requirements gathered successfully!
+```bash
+docker run -it --env-file .env -v "%cd%\output:/app\output" agentic-game-builder
+```
 
-━━━ Phase 2: Game Planning ━━━
-┌───── 📋 Game Design Document ─────┐
-│ Title: Space Blaster               │
-│ Framework: vanilla-js              │
-│ Win Condition: Reach 1000 points   │
-└────────────────────────────────────┘
+**Windows (PowerShell):**
 
-━━━ Phase 3: Code Generation & Validation ━━━
-✅ Validation passed!
-
-📁 Generated Files — index.html (1.2 KB), style.css (0.8 KB), game.js (8.5 KB)
-✅ Game files saved to: output/space-blaster/
-🎉 Game generated successfully!
+```bash
+docker run -it --env-file .env -v "${PWD}/output:/app/output" agentic-game-builder
 ```
 
 ## 🏗️ Agent Architecture
@@ -91,17 +83,26 @@ Enter your game idea:
 └──────┬──────────┬──────────┬───────────┬────┘
        ▼          ▼          ▼           ▼
   Clarifier   Planner   Executor    Validator
- (Flash Lite) (Flash)    (Pro)      (Flash)
+ (Flash Lite) (Flash)    (Flash)    (Flash)
+```
+
+### Pipeline Flow
+
+```
+User Input → Clarifier → [Interactive Q&A] → Planner → Executor → Validator
+                                                          ↑           │
+                                                          └── retry ──┘
+                                                         (max 3 times)
 ```
 
 ### Agent Model Routing
 
 | Agent | Model | Role |
 |-------|-------|------|
-| **Clarifier** | Gemini 2.5 Flash Lite | Extracts requirements with minimal questions |
-| **Planner** | Gemini 2.5 Flash | Creates structured YAML game design document |
-| **Executor** | Gemini 2.5 Pro | Generates complete, playable code — 100% dynamic |
-| **Validator** | Gemini 2.5 Flash | Two-layer validation: deterministic + LLM review |
+| **Clarifier** | Gemini 2.5 Flash Lite | Extracts requirements with minimal questions. Highly cost-efficient for conversation. |
+| **Planner** | Gemini 2.5 Flash | Creates structured YAML game design document using native tool calling. |
+| **Executor** | Gemini 2.5 Flash | Generates complete, playable code (100% dynamic) using an 8K output token window. |
+| **Validator** | Gemini 2.5 Flash | Two-layer validation: deterministic structure checks + LLM semantic review. |
 
 ### Technology Stack
 
@@ -115,15 +116,39 @@ Enter your game idea:
 | Containerization | Docker |
 | Testing | pytest |
 
-## 🔄 Error Handling
+## ⚖️ Trade-Offs Made
+
+### 1. The FinOps Pivot (Cost vs. Raw Capabilities)
+
+I initially architected the system using Anthropic's Claude 3.5 Sonnet and Opus for the Executor agent. While Opus provided excellent zero-shot code generation, telemetry revealed an unsustainable cost-to-performance ratio (averaging $1.50+ per run for simple games), largely due to expensive retry loops. I made the architectural trade-off to pivot the entire stack to the Google Gemini 2.5 API. This dropped the operational cost by over 95% while maintaining generation quality.
+
+### 2. State Machine vs. Autonomous Frameworks
+
+Instead of using heavy, black-box agent frameworks like AutoGen or CrewAI, I implemented a custom Sequential Orchestrator using a while loop and a Pydantic V2 state object. The trade-off is a loss of "autonomous creativity" (agents cannot arbitrarily call each other), but the gain is absolute deterministic control, ensuring the system never loops infinitely or skips the clarification phase.
+
+### 3. Data Privacy vs. Free Tier
+
+To maximize cost-efficiency during development, this system defaults to the Google Gemini API Free Tier. The architectural trade-off is data privacy, as free-tier API data may be used for model training. For a production deployment, the system would require a Paid Tier billing account to ensure Amgo Games' IP remains private.
+
+## 🔮 Improvements With More Time
+
+- **Native Structured Outputs** — Currently, the system relies on regex and fallback logic to parse YAML/JSON from the models. With more time, I would strictly enforce Gemini's `response_schema` API parameter to mathematically guarantee Pydantic validation on the LLM's output.
+
+- **Parallel Validation** — The Validator currently runs sequentially after file generation. I would refactor this to run asynchronous syntax linters (like ESLint) in parallel with the LLM semantic review to reduce latency.
+
+- **Streaming UI Responses** — Implementing token streaming in the CLI would significantly improve UX during the Execution phase, giving the user immediate visual feedback while the 10KB+ game code generates.
+
+## 🔄 Error Handling (Self-Healing in Action)
+
+Because LLMs are non-deterministic, generating raw code zero-shot is prone to hallucination. This architecture uses a multi-agent system to achieve "self-healing."
 
 - **`@safe_llm_call` decorator** — wraps all API calls with:
-  - Rate-limit (429) → exponential backoff (2ˣ seconds, max 3 retries)
+  - Rate-limit / 503 overload → exponential backoff (2ˣ seconds, max 3 retries)
   - Timeout → retry after 5 seconds
   - API errors → logged and re-raised
   - Empty responses → `ValueError`
-- **Retry logic** — validation failures trigger re-execution (max 3 attempts)
-- **Failed attempts** — saved to `output/failed/` for debugging
+- **Validation retry loop** — If the Executor mistakenly imports the wrong framework (e.g., Phaser instead of Vanilla JS) or leaves placeholder comments (`// TODO`), the Validator Agent catches the mismatch, rejects the code, and passes the error logs back to the Executor for regeneration.
+- **Failed attempts** — saved to `output/failed/` with timestamps for debugging.
 
 ## 📁 Project Structure
 
@@ -131,10 +156,10 @@ Enter your game idea:
 agentic-game-builder/
 ├── agents/
 │   ├── __init__.py          # Package exports
-│   ├── clarifier.py         # Requirements extraction
-│   ├── planner.py           # Game design document
-│   ├── executor.py          # Code generation
-│   └── validator.py         # Code validation
+│   ├── clarifier.py         # Requirements extraction (Flash Lite)
+│   ├── planner.py           # Game design document (Flash)
+│   ├── executor.py          # Code generation (Flash)
+│   └── validator.py         # Code validation (Flash)
 ├── prompts/
 │   └── agent_prompts.py     # All prompt templates
 ├── utils/

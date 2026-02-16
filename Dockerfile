@@ -1,28 +1,22 @@
-# Use official Python 3.12 slim image
+# Use a lightweight Python base image
 FROM python:3.12-slim
 
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first (Docker layer caching)
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Create output directory
-RUN mkdir -p /app/output
-
-# Set environment variables
+# Prevent Python from writing .pyc files and buffer stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Run the agent
-CMD ["python", "main.py"]
+# Set the working directory
+WORKDIR /app
+
+# Install dependencies first (to leverage Docker cache)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# Ensure the output directory exists
+RUN mkdir -p output
+
+# Set the entrypoint to run the interactive orchestrator
+ENTRYPOINT ["python", "main.py"]
