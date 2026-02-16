@@ -180,7 +180,7 @@ agentic-game-builder/
 ├── orchestrator.py          # Custom sequential orchestrator
 ├── config.py                # Model routing & constants
 ├── Dockerfile
-├── docker-compose.yml
+├── .dockerignore
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
